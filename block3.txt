@@ -1,0 +1,146 @@
+.xml
+	时间：
+		<if test="startTime != null" >
+          <![CDATA[ and DATE_FORMAT(omn.END_TIME, '%Y-%m-%d') >= DATE_FORMAT(#{startTime}, '%Y-%m-%d') ]]>
+      	</if>
+     模糊查询
+		<if test="name != null and name !=''" >
+			and omn.NAME like concat('%',#{name},'%')
+		</if>
+	
+jsp	
+	查询条件：
+		分行：
+			<div class="searchDiv"></div>
+		时间选择：
+			<div class="inputWidDiv inputWidDivBoms">
+				<i class="startImg"></i>
+				<input name="startTime" id="startTime" class="input-text size-M" onClick="WdatePicker({dateFmt:'yyyy-MM-dd'})" placeholder="请输入日期" readonly />
+				<span class="joinSign">-</span>
+			</div>
+			<div class="inputWidDiv inputWidDivBoms ml-8">
+				<i class="startImg"></i>
+				<input name="endTime" id="endTime" class="input-text size-M" onClick="WdatePicker({dateFmt:'yyyy-MM-dd'})" placeholder="请输入日期" readonly/>
+			</div>
+		输入框：
+			<label class="labeWidDiv">乙&emsp;&emsp;方</label>&ensp;:&ensp;
+			<div class="inputWidDiv">
+				<input type="text" name="partyB"
+				   id="partyB" placeholder="请填写乙方"
+				   class="input-text size-M" value="${contract.partyB}">
+			</div>
+		下拉选择：
+			<label class="labeWidDiv">合同类型</label>&ensp;:&ensp;
+        	<div class="inputWidDiv inputWidDivBom">
+        		<select class="input-text size-M pthb" name="type" id="type">
+					<option value="">===请选择===</option>
+					<c:forEach items="${dic}" var="dic">
+						<option value="${dic.id}"
+							<c:if test="${dic.id eq contract.type}">selected</c:if>>${dic.value}</option>
+					</c:forEach>
+				</select>
+				<div class="line-A"></div>
+        	</div>
+		功能按钮：
+			<span class="spanSearchBtn">
+				<button class="btn" type="button" onclick="query()">
+					<i class="Hui-iconfont">&#xe665;</i> 查询
+				</button>
+					<a class="btn" href="javascript:;" onclick="contract_add('添加合同','<%=path %>/role/toAdd','800','400')"><i class="Hui-iconfont">&#xe600;</i> 添加</a>
+			</span>
+		弹框：
+			$.MsgBox.Alert("温馨提示", "网络异常！");
+			$.MsgBox.Confirm("温馨提示",'确认要删除吗？',function(){
+				$.post("<%=basePath%>villager/del",{id:id},function(){
+					query();
+				});
+			});
+		初始化数据表：
+			let table = new rybtTableTree({
+			    element: document.getElementById("tableMain"),
+			    showCheckbox: false,
+			    getPageListEvent: function (pageNum, pageSize) {
+			        publicPage(pageNum, pageSize);
+			    },
+			    columns: [
+			        {title: '项目名称', filedName: 'name', width: '20%'},
+			        {title: '成果类型', filedName: 'typeName', width: '10%'},
+			        {title: '获奖级别', filedName: 'lvName', width: '10%'},
+			        {title: '主持负责人', filedName: 'firstName', width: '20%'},
+			        {title: '执行负责人', filedName: 'implementName', width: '10%'},
+			        {title: '参与完成人', filedName: 'joinName', width: '10%'},
+			        {title: '项目完成时间', filedName: 'performanceDate', width: '10%',formatEvent:function (colData) {
+		                return getDate(colData);
+		            }},
+			        {title: '操作', filedName: '', width: '10%', formatEvent: function (colData, rowData) {
+			            return "<i class='upData' onclick='edit(" + rowData.id + ")' title='修改'></i>\n" +
+							"<i class='delData' onclick='del(" + rowData.id + ")' title='删除'></i>\n";
+			        }}
+			    ]
+			});
+			table.init();
+		查询数据：
+			function publicPage(pageNum,pageSize){
+			    showLoading();
+			    $.post(url+"?pageNum="+pageNum+"&pageSize="+pageSize,$("#queryForm").serialize(),function (result) {
+			        //绑定数据
+			        table.bindData(result.list,result);
+			    }).error(function (result) {
+			        $.MsgBox.Alert("温馨提示", "网络异常！");
+			    }).complete(function () {
+			        removeLoading();
+			    })
+			}
+	add:
+		验证：
+			jquery.validationEngine.js   在class中设置validate[xxxx]即可
+			
+			required			必需
+			maxSize[100]		最多可输入多少个字符
+			custom[number]		验证数字
+			custom[integer]		验证整数
+		分行：
+			<div class="row"></div>
+		单项：
+			<div class="f-l">
+	          <label class="wLabel text-r">是否公开</label>
+	        </div>
+	        <div class="f-l flex">
+	         	<!-- select -->
+	        	<div clas="f-l wInput">
+		            <select class="input-text validate[required]"  id="documentPub" name="documentPub">
+					<option value="">===请选择===</option>
+					<option value="1">是</option>
+					<option value="0">否</option>
+					</select>
+				</div>
+				<!-- input -->
+				<input type="text" class="input-text validate[maxSize[50],required]" id="title" name="title">
+	        </div>
+	        <div class="req-DW">
+		          <span class="c-red">*</span>
+	        </div>
+	    人员选择弹框：
+	    	1、<!-- 引入选择人员js -->
+			script type="text/javascript" src="<%=basePath%>demo_static/common/commonUserJs/commonUserSelect.js"></script>
+			2、
+	    	<div class="f-l flex">
+	        	<div class="f-l wInput pos-r">
+		          <input type="hidden" id="personnel2">
+				  <input type="text" maxlength="150" class="input-text validate[maxSize[100],required] pr-30" name="personnel" id="personnel" readonly="readonly">
+		          <span title="选择人员" class="xzPeople" onclick="selectCheckBoxCommonUser('personnel2','personnel','getPersonNum')"></span>
+	        	</div>
+	        </div>
+	edit:
+		时间格式化：
+			value="<fmt:formatDate value="${fellowship.activityTime }" pattern="yyyy-MM-dd" type="date"/>"
+			
+	content:
+		设置背景为灰色不可用：添加一个class即可，hbp
+		其他操作：
+			input readonly
+			select disabled
+controller:
+	得到登录信息:
+		UserInfo ui = new UserInfo();
+		Integer userId = ui.getUserId(request);
