@@ -1,0 +1,45 @@
+1、添加和编辑时判断某字段是否重复（比如身份证号）：
+	public void  xxxxx(String fieldValue, Integer id, HttpServletResponse response){
+        Book b = new Book();
+        b.setNo(fieldValue);
+        List<Book> list = bookService.select(b);
+        int length = list.size();
+        PrintWriter out;
+        try {
+            out = response.getWriter();
+            boolean flag = true;
+            //验证是否唯一
+            if(length > 0){
+                if(id == null){
+                    flag = false;
+                }else{
+                    if(list.get(0).getId() != id){
+                        flag = false;
+                    }
+                }
+            }
+            String[] result = new String[2];
+            if(flag) {
+                //唯一
+                result[0] = "no";
+                result[1] = "true";
+            }else {
+                //不唯一
+                result[0] = "no";
+                result[1] = "";
+            }
+            Gson gson = new Gson();
+            String str = gson.toJson(result);
+            out.print(str);
+            out.flush();
+            out.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+2、mybatis的if判断句，当字段的类型为Integer,不要使用propertyName != ''
+	正确：<if test="propertyName != null">
+	错误：<if test="propertyName != null and propertyName != ''">
+
+3、做统计的时候，提供主要标准的表作为left join的主表
